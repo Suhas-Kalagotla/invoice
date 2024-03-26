@@ -1,0 +1,18 @@
+@media screen {
+  img.seal {
+    display: none;
+  }
+}
+
+/* Define the header and footer */
+@page {
+  size: A4;
+  margin-bottom: 3cm;
+  margin-top: 3cm;
+  margin-left: "0px";
+  margin-right: "0px";
+}
+
+@page :first {
+  margin-top: 200px;
+}

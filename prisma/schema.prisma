@@ -1,0 +1,205 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int             @id @default(autoincrement())
+  email         String          @unique
+  name          String
+  phone         String?
+  password      String
+  invoices      Invoice[]
+  Setting       Setting[]
+  client        Client[]
+  DefaultValues DefaultValues[]
+}
+
+model DefaultValues {
+  id   Int  @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id])
+
+  note          String
+  terms         String
+  currency_code String
+
+  tax_rate Int
+  userId   Int
+
+  INVOICE_lbl String
+
+  FROM_lbl       String
+  BILL_TO_lbl    String
+  SHIPPED_TO_lbl String
+
+  //
+
+  DATE_PREPARED_lbl String
+  PAYMENT_TERMS_lbl String
+  DUE_DATE_lbl      String
+  PO_lbl            String
+
+  // Table
+
+  TABLE_ITEM_lbl   String
+  TABLE_QTY_lbl    String
+  TABLE_RATE_lbl   String
+  TABLE_AMOUNT_lbl String
+
+  // Footer
+
+  NOTE_lbl  String
+  LINK_lbl  String
+  QR_lbl    String
+  TERMS_lbl String
+
+  // Total
+
+  SUB_TOTAL_lbl   String
+  DISCOUNT_lbl    String
+  SHIPPING_lbl    String
+  TAX_RATE_lbl    String
+  TOTAL_lbl       String
+  AMOUNT_PAID_lbl String
+  BALANCE_DUE_lbl String
+  SIGNATURE_lbl   String
+}
+
+model Invoice {
+  id Int @id @default(autoincrement())
+
+  bill_to       String
+  shipped_to    String
+  date_prepared DateTime
+  payment_terms Int 
+  due_date      DateTime
+  po            String
+
+  // Table
+
+  items InvoiceItem[]
+
+  // Total
+
+  discount    Int
+  shipping    Int
+  amount_paid Int
+  link        String
+
+  // Default Values Inherited and CUstomized
+
+  note          String
+  terms         String
+  currency_code String
+
+  tax_rate Int
+  userId   Int
+
+  // Labels
+  INVOICE_lbl String
+
+  //
+  FROM_lbl       String
+  BILL_TO_lbl    String
+  SHIPPED_TO_lbl String
+
+  //
+
+  DATE_PREPARED_lbl String
+  PAYMENT_TERMS_lbl String
+  DUE_DATE_lbl      String
+  PO_lbl            String
+
+  // Table
+
+  TABLE_ITEM_lbl   String
+  TABLE_QTY_lbl    String
+  TABLE_RATE_lbl   String
+  TABLE_AMOUNT_lbl String
+
+  // Footer
+
+  NOTE_lbl  String
+  LINK_lbl  String
+  QR_lbl    String
+  TERMS_lbl String
+
+  // Total
+
+  SUB_TOTAL_lbl   String
+  DISCOUNT_lbl    String
+  SHIPPING_lbl    String
+  TAX_RATE_lbl    String
+  TOTAL_lbl       String
+  AMOUNT_PAID_lbl String
+  BALANCE_DUE_lbl String
+  SIGNATURE_lbl   String
+
+  User User? @relation(fields: [userId], references: [id])
+}
+
+model InvoiceItem {
+  id          Int      @id @default(autoincrement())
+  Invoice     Invoice? @relation(fields: [invoiceId], references: [id])
+  invoiceId   Int?
+  description String
+  qty         Int
+  price       Float
+}
+
+model Client {
+  id   Int  @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id])
+
+  type ClientType
+
+  organization_name  String?
+  contact_first_name String?
+  contact_last_name  String?
+
+  first_name String?
+  last_name  String?
+
+  currency_code String @default("INR")
+  language_code String @default("hin")
+  email         String @default("")
+  phone         String @default("")
+  street_1      String @default("")
+  street_2      String @default("")
+  city          String @default("")
+  state         String @default("")
+  postal        String @default("")
+  country_code  String @default("IND")
+  userId        Int
+}
+
+enum ClientType {
+  PERSON
+  ORGANIZATION
+}
+
+model Setting {
+  id   Int  @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id])
+
+  company_name String
+  email        String
+  website      String
+
+  // Address
+  street_1 String
+  street_2 String
+
+  city         String
+  state        String
+  postal       String
+  country_code String
+  userId       Int
+}
