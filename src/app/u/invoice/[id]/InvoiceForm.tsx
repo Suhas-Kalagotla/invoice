@@ -148,6 +148,10 @@ export default function InvoiceForm(props: {
               ...rest,
               date_prepared: new Date(date_prepared),
               due_date: new Date(due_date),
+              tax_rate: Number(tax_rate),
+              discount: Number(discount),
+              shipping: Number(shipping),
+              amount_paid: Number(amount_paid),
               items: items.map((i) => {
                 return {
                   ...i,
@@ -852,7 +856,7 @@ export default function InvoiceForm(props: {
                               <tr>
                                 <td>
                                   <AdvTextField
-                                    defaultvalue={values.SHIPPING_lbl}
+                                    value={values.SHIPPING_lbl}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                     name="SHIPPING"
@@ -883,6 +887,11 @@ export default function InvoiceForm(props: {
                                         </InputAdornment>
                                       ),
                                     }}
+                                    inputProps={{
+                                      style: {
+                                        textAlign: "right",
+                                      },
+                                    }}
                                   />
                                 </td>
 
@@ -905,6 +914,7 @@ export default function InvoiceForm(props: {
                               <tr>
                                 <td>
                                   <AdvTextField
+                                    value={values.TAX_RATE_lbl}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                   />
@@ -927,8 +937,6 @@ export default function InvoiceForm(props: {
                                       ),
                                     }}
                                     inputProps={{
-                                      /// <reference path="" />
-
                                       style: {
                                         textAlign: "right",
                                       },
