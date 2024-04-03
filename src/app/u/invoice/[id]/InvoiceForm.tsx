@@ -131,7 +131,7 @@ export default function InvoiceForm(props: {
     >
   >();
 
-  const [showTemplateSaveDialog, setShowTemplateSaveDialog] = useState(false);
+ const [showTemplateSaveDialog, setShowTemplateSaveDialog] = useState(false);
   const [openClientModal, setOpenClientModal] = useState<boolean>(false);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
 
