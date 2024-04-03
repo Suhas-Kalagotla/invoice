@@ -16,7 +16,7 @@ export default async function InvoicePage({
     | (Invoice & {
         items: InvoiceItem[];
       })
-    | undefined = undefined;
+    | null = null;
   if (params.id !== "add") {
     invoice = await prisma.invoice.findUnique({
       where: {
@@ -45,6 +45,14 @@ export default async function InvoicePage({
       userId: user.id,
     },
   });
+
+  const lastInvoice = await prisma.invoice.findFirst({
+    orderBy: {
+      id: "desc",
+    },
+  });
+
+  console.log("lastInvoice", lastInvoice);
 
   return (
     <InvoiceForm
