@@ -2,7 +2,7 @@
 
 "use server";
 
-import { Container, Paper, Stack, Typography } from "@mui/material";
+import { Button, Container, Paper, Stack, Typography } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import { Invoice, PrismaClient } from "@prisma/client";
 import InvoiceTable from "./invoice/InvoiceTable";
@@ -13,12 +13,15 @@ import getUser from "@/lib/user";
 const prisma = new PrismaClient();
 
 export default async function InvoiceDashboadPage() {
-  const user = getUser();
+  const user = await getUser();
 
   console.log("Dashboard...");
   const invoices = await prisma.invoice.findMany({
     where: {
       userId: user.id,
+    },
+    include: {
+      items: true,
     },
   });
 
@@ -54,11 +57,9 @@ export default async function InvoiceDashboadPage() {
         <NewInvoiceButton />
       </Stack>
 
-        {invoices.map((inv: Invoice) => {
-          return (
-              <InvoiceTable invoice={inv} />
-          );
-        })}
+      {invoices.map((inv) => {
+        return <InvoiceTable invoice={inv} user={user} />;
+      })}
     </Container>
   );
 }

@@ -10,7 +10,7 @@ export default async function InvoicePage({
   params: { id: string };
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const user = getUser();
+  const user = await getUser();
 
   let invoice:
     | (Invoice & {

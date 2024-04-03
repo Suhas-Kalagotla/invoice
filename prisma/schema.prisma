@@ -78,7 +78,7 @@ model Invoice {
   bill_to       String
   shipped_to    String
   date_prepared DateTime
-  payment_terms Int 
+  payment_terms Int
   due_date      DateTime
   po            String
 
