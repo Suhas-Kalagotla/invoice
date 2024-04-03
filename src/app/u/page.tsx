@@ -4,10 +4,12 @@
 
 import { Button, Container, Paper, Stack, Typography } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
-import { Invoice, PrismaClient } from "@prisma/client";
-import InvoiceTable from "./invoice/InvoiceTable";
+import { Invoice, InvoiceItem, PrismaClient } from "@prisma/client";
+// import InvoiceTable from "./invoice/InvoiceTable";
 import { NewInvoiceButton } from "./invoice/NewInvoiceButton";
 import getUser from "@/lib/user";
+import CustomTable from "@/components/Table";
+import InvoiceTable from "./InvoiceTable";
 // import { prisma } from "@/lib/db";
 
 const prisma = new PrismaClient();
@@ -57,9 +59,10 @@ export default async function InvoiceDashboadPage() {
         <NewInvoiceButton />
       </Stack>
 
-      {invoices.map((inv) => {
-        return <InvoiceTable invoice={inv} user={user} />;
-      })}
+      {/* {invoices.map((inv: Invoice) => {
+        return <InvoiceTable invoice={inv} />;
+      })} */}
+      <InvoiceTable invoices={invoices} />
     </Container>
   );
 }

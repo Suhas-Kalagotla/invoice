@@ -16,18 +16,22 @@ export default async function InvoicePage({
     | (Invoice & {
         items: InvoiceItem[];
       })
-    | null = null;
-  if (params.id !== "add") {
-    invoice = await prisma.invoice.findUnique({
-      where: {
-        id: Number.parseInt(params.id),
-      },
-      include: {
-        items: true,
-      },
-    });
-  }
+    | undefined = undefined;
+  // if (params.id !== "add") {
+  //   invoice = await prisma.invoice.findUnique({
+  //     where: {
+  //       id: Number.parseInt(params.id),
+  //     },
+  //     include: {
+  //       items: true,
+  //     },
+  //   });
+  // }
 
+  const invoices = await prisma.invoice.findMany();
+
+  const invoiceId =
+    invoices.length > 0 ? invoices[invoices.length - 1].id + 1 : 1;
   const defaultValues = await prisma.defaultValues.findFirstOrThrow({
     where: {
       userId: user.id,
@@ -60,6 +64,7 @@ export default async function InvoicePage({
       settings={settings}
       clients={clients}
       defaultValues={defaultValues}
+      invoiceId={invoiceId}
     />
   );
 }

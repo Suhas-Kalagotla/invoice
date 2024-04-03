@@ -53,13 +53,13 @@ export default function SignIn() {
         callbackUrl: "/u",
         redirect: false,
       });
-    } catch (error) {
-      console.error("An unexpected error happened:", error);
-    }
 
     router.push("/u");
-
     console.log("signed in");
+
+    } catch (error) {
+        console.error("An unexpected error happened:", error);
+    }
   };
 
   return (
