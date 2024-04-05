@@ -37,10 +37,10 @@ type Order = "asc" | "desc";
 
 function getComparator<Key extends keyof any>(
   order: Order,
-  orderBy: Key
+  orderBy: Key,
 ): (
   a: { [key in Key]: number | string },
-  b: { [key in Key]: number | string }
+  b: { [key in Key]: number | string },
 ) => number {
   return order === "desc"
     ? (a, b) => descendingComparator(a, b, orderBy)
@@ -53,7 +53,7 @@ function getComparator<Key extends keyof any>(
 // with exampleArray.slice().sort(exampleComparator)
 function stableSort<T>(
   array: readonly T[],
-  comparator: (a: T, b: T) => number
+  comparator: (a: T, b: T) => number,
 ) {
   const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
   stabilizedThis.sort((a, b) => {
@@ -147,7 +147,7 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
           bgcolor: (theme) =>
             alpha(
               theme.palette.primary.main,
-              theme.palette.action.activatedOpacity
+              theme.palette.action.activatedOpacity,
             ),
         }),
       }}
@@ -211,7 +211,7 @@ export default function CustomTable({ headcells, rows }: Props) {
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
-    property: string
+    property: string,
   ) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
@@ -229,7 +229,7 @@ export default function CustomTable({ headcells, rows }: Props) {
 
   const handleClick = (
     event: React.MouseEvent<unknown>,
-    id: number | string
+    id: number | string,
   ) => {
     const selectedIndex = selected.indexOf(id);
     let newSelected: (number | string)[] = [];
@@ -243,7 +243,7 @@ export default function CustomTable({ headcells, rows }: Props) {
     } else if (selectedIndex > 0) {
       newSelected = newSelected.concat(
         selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
+        selected.slice(selectedIndex + 1),
       );
     }
     setSelected(newSelected);
@@ -254,7 +254,7 @@ export default function CustomTable({ headcells, rows }: Props) {
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -274,9 +274,9 @@ export default function CustomTable({ headcells, rows }: Props) {
     () =>
       stableSort(rows, getComparator(order, orderBy)).slice(
         page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
+        page * rowsPerPage + rowsPerPage,
       ),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage],
   );
 
   return (
@@ -306,7 +306,6 @@ export default function CustomTable({ headcells, rows }: Props) {
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => handleClick(event, row.id)}
                     role="checkbox"
                     aria-checked={isItemSelected}
                     tabIndex={-1}
@@ -316,6 +315,7 @@ export default function CustomTable({ headcells, rows }: Props) {
                   >
                     <TableCell padding="checkbox">
                       <Checkbox
+                        onClick={(event) => handleClick(event, row.id)}
                         color="primary"
                         checked={isItemSelected}
                         inputProps={{

@@ -51,7 +51,11 @@ function ResponsiveAppBar() {
 
   return (
     <>
-      <AppBar color="inherit" position="fixed">
+      <AppBar
+        color="inherit"
+        sx={{ bgcolor: "#3d4c59", color: "#fff" }}
+        position="fixed"
+      >
         <Container maxWidth="xl">
           <Toolbar variant="dense" disableGutters>
             <Stack
@@ -67,7 +71,7 @@ function ResponsiveAppBar() {
                     setShowDrawer(true);
                   }}
                 >
-                  <MenuIcon fontSize="small" />
+                  <MenuIcon fontSize="small" sx={{ color: "#fff" }} />
                 </IconButton>
                 <Typography
                   noWrap
@@ -83,7 +87,7 @@ function ResponsiveAppBar() {
                     textDecoration: "none",
                   }}
                 >
-                  Sures Invoice
+                  Invoice
                 </Typography>
                 {!isOnline && (
                   <Chip

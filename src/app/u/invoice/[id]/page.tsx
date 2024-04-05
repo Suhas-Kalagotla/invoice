@@ -16,17 +16,18 @@ export default async function InvoicePage({
     | (Invoice & {
         items: InvoiceItem[];
       })
-    | undefined = undefined;
-  // if (params.id !== "add") {
-  //   invoice = await prisma.invoice.findUnique({
-  //     where: {
-  //       id: Number.parseInt(params.id),
-  //     },
-  //     include: {
-  //       items: true,
-  //     },
-  //   });
-  // }
+    | null = null;
+
+  if (params.id !== "add") {
+    invoice = await prisma.invoice.findUnique({
+      where: {
+        id: Number.parseInt(params.id),
+      },
+      include: {
+        items: true,
+      },
+    });
+  }
 
   const invoices = await prisma.invoice.findMany();
 
@@ -58,12 +59,18 @@ export default async function InvoicePage({
 
   console.log("lastInvoice", lastInvoice);
 
+  const invoiceLast = await prisma.invoice.findFirst({
+    orderBy: {
+      id: "desc",
+    },
+  });
+
   return (
     <InvoiceForm
       invoice={invoice}
       settings={settings}
       clients={clients}
-      defaultValues={defaultValues}
+      values={defaultValues}
       invoiceId={invoiceId}
     />
   );

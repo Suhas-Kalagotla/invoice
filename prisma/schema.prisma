@@ -75,7 +75,7 @@ model DefaultValues {
 model Invoice {
   id Int @id @default(autoincrement())
 
-  bill_to       String
+  bill_to       Int 
   shipped_to    String
   date_prepared DateTime
   payment_terms Int
@@ -143,6 +143,7 @@ model Invoice {
   SIGNATURE_lbl   String
 
   User User? @relation(fields: [userId], references: [id])
+  client Client? @relation(fields:[bill_to],references:[id])
 }
 
 model InvoiceItem {
@@ -159,7 +160,7 @@ model Client {
   user User @relation(fields: [userId], references: [id])
 
   type ClientType
-
+  invoices      Invoice[]
   organization_name  String?
   contact_first_name String?
   contact_last_name  String?

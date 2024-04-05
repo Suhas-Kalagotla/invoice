@@ -18,6 +18,7 @@ import { useMemo } from "react";
 import { FormattedNumber } from "react-intl";
 import NumericFormatCustom from "../../../../components/NumericFormatCustom";
 import { Invoice, InvoiceItem } from "@prisma/client";
+import { useEffect } from "react";
 
 export default function InvoiceTable(props: {
   formik: FormikProps<
@@ -27,6 +28,20 @@ export default function InvoiceTable(props: {
   >;
 }) {
   const { handleBlur, handleChange, values, setFieldValue } = props.formik;
+
+  useEffect(() => {
+    if (values.items.length === 0) {
+      setFieldValue("items", [
+        {
+          description: "",
+          qty: 1,
+          price: 0,
+          invoiceId: values.id,
+          id: 0,
+        },
+      ]);
+    }
+  }, [setFieldValue, values.id, values.items]);
 
   const currency: Currency = useMemo(
     function () {
@@ -43,24 +58,27 @@ export default function InvoiceTable(props: {
       }
       return curr;
     },
-    [values.currency_code]
+    [values.currency_code],
   );
 
   return (
     <TableContainer
       sx={{
         mt: 2,
+        borderRadius: "8px",
+        border: "1px solid black",
       }}
     >
       <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>
+        <TableHead sx={{ bgcolor: "#232e38", borderRadius: "8px" }}>
+          <TableRow sx={{ borderRadius: "8px" }}>
+            <TableCell sx={{ borderRadius: "8px" }}>
               <AdvTextField
                 value={values.TABLE_ITEM_lbl}
                 inputProps={{
                   style: {
                     textAlign: "left",
+                    color: "#fff",
                   },
                 }}
                 onChange={handleChange}
@@ -74,6 +92,7 @@ export default function InvoiceTable(props: {
                 inputProps={{
                   style: {
                     textAlign: "left",
+                    color: "#fff",
                   },
                 }}
                 onChange={handleChange}
@@ -86,6 +105,7 @@ export default function InvoiceTable(props: {
                 inputProps={{
                   style: {
                     textAlign: "left",
+                    color: "#fff",
                   },
                 }}
                 onChange={handleChange}
@@ -98,6 +118,7 @@ export default function InvoiceTable(props: {
                 inputProps={{
                   style: {
                     textAlign: "right",
+                    color: "#fff",
                   },
                 }}
                 onChange={handleChange}

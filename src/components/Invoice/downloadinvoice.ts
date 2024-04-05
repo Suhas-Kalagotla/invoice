@@ -11,6 +11,19 @@ export const downloadInvoice = (
   }
 ) => {
   const doc = new jsPDF();
+  const subTotal = invoice.items
+    .map((p) => p.qty * p.price)
+    .reduce((p, c) => {
+      return p + c;
+    }, 0);
+
+  const taxAmount = subTotal * (invoice.tax_rate / 100);
+
+  const discountAmount = (subTotal + taxAmount) * (invoice.discount / 100);
+
+  const total =
+    subTotal + taxAmount - discountAmount + Number(invoice.shipping);
+  const balanceDue = total - Number(invoice.amount_paid);
 
   autoTable(doc, {
     body: [
@@ -174,7 +187,7 @@ export const downloadInvoice = (
           },
         },
         {
-          content: invoice.currency_code + " " + invoice.amount_paid,
+          content: invoice.currency_code + " " + subTotal,
           styles: {
             halign: "right",
           },
@@ -188,7 +201,7 @@ export const downloadInvoice = (
           },
         },
         {
-          content: "$400",
+          content: invoice.currency_code + " " + taxAmount,
           styles: {
             halign: "right",
           },
@@ -202,7 +215,7 @@ export const downloadInvoice = (
           },
         },
         {
-          content: "$4000",
+          content: invoice.currency_code + " " + total,
           styles: {
             halign: "right",
           },

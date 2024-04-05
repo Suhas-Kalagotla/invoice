@@ -1,5 +1,9 @@
 "use client";
-
+import CustomizedSnackbars from "@/components/Alert";
+import React from "react";
+import { createRef, forwardRef, useState } from "react";
+import { TransitionProps } from "@mui/material/transitions";
+import { saveSettings } from "./saveSettings";
 import {
   ArrowBackIos,
   Business,
@@ -9,6 +13,14 @@ import {
   LocationCity,
   Save,
 } from "@mui/icons-material";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Slide,
+} from "@mui/material";
 import {
   Autocomplete,
   Box,
@@ -31,10 +43,13 @@ import engLocale from "i18n-iso-countries/langs/en.json";
 import { AlertContext } from "../invoice/[id]/components/Alert";
 import Link from "next/link";
 import ImageSelector from "../invoice/[id]/ImageSelector";
+import { Setting } from "@prisma/client";
 
 export default function SettingForm(props: { setting: Setting }) {
   const { setting } = props;
   const alertContext = useContext(AlertContext);
+  const [showDialog, setShowDialog] = useState(false);
+  const [open, setOpen] = useState(false);
 
   isoCountries.registerLocale(engLocale);
 
@@ -46,10 +61,7 @@ export default function SettingForm(props: { setting: Setting }) {
   return (
     <Formik
       initialValues={setting}
-      // validationSchema={{}}
       onSubmit={(values) => {
-        // localStorage.setItem("settings", JSON.stringify(values));
-
         alertContext?.showAlert({
           message: "The business profile are saved",
           severity: "success",
@@ -87,19 +99,18 @@ export default function SettingForm(props: { setting: Setting }) {
 
                 <Button
                   onClick={() => {
-                    const fd = new FormData();
-                    const files_keys = ["logo"];
-                    Object.entries(values).forEach(([key, value]) => {
-                      if (files_keys.includes(key)) {
-                        if (value instanceof Blob) {
-                          fd.append(key, value);
-                        }
-                      } else {
-                        fd.append(key, `${value}`);
-                      }
-                    });
-
-                    alert("Not implemente yet");
+                    // const fd = new FormData();
+                    // const files_keys = ["logo"];
+                    // Object.entries(values).forEach(([key, value]) => {
+                    //   if (files_keys.includes(key)) {
+                    //     if (value instanceof Blob) {
+                    //       fd.append(key, value);
+                    //     }
+                    //   } else {
+                    //     fd.append(key, `${value}`);
+                    //   }
+                    // });
+                    setShowDialog(true);
                   }}
                   startIcon={<Save />}
                   type="submit"
@@ -114,7 +125,7 @@ export default function SettingForm(props: { setting: Setting }) {
                 </Box>
                 <Grid mt={3} container spacing={2}>
                   {/* Logi */}
-                  <Grid xs={12}>
+                  {/* <Grid xs={12}>
                     <FormControl>
                       <ImageSelector
                         onChange={(val) => {
@@ -125,7 +136,7 @@ export default function SettingForm(props: { setting: Setting }) {
                         height={100}
                       />
                     </FormControl>
-                  </Grid>
+                  </Grid> */}
                   {/* Company Name */}
                   <Grid xs={12}>
                     <FormControl fullWidth>
@@ -345,6 +356,26 @@ export default function SettingForm(props: { setting: Setting }) {
                             {errors.country_code}
                           </FormHelperText>
                         )}
+                        <UpdateDetails
+                          onClose={() => {
+                            setShowDialog(false);
+                          }}
+                          open={showDialog}
+                          onYes={async () => {
+                            try {
+                              await saveSettings(values);
+                              setShowDialog(false);
+                              setOpen(true);
+                            } catch (error) {
+                              console.log(error);
+                            }
+                          }}
+                        />
+                        <CustomizedSnackbars
+                          open={open}
+                          description={"User Details Saved Successfully"}
+                          setOpen={setOpen}
+                        ></CustomizedSnackbars>
                       </FormControl>
                     </Grid>
                   </Grid>
@@ -355,5 +386,44 @@ export default function SettingForm(props: { setting: Setting }) {
         );
       }}
     </Formik>
+  );
+}
+
+const Transition = forwardRef(function Transition(
+  props: TransitionProps & {
+    children: React.ReactElement<any, any>;
+  },
+  ref: React.Ref<unknown>,
+) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
+function UpdateDetails(props: {
+  onClose: () => void;
+  open: boolean;
+  onYes: () => void;
+}) {
+  return (
+    <React.Fragment>
+      <Dialog
+        open={props.open}
+        onClose={props.onClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">Save Change?</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            This action can not be reversed.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={props.onClose}>No</Button>
+          <Button onClick={props.onYes} autoFocus>
+            Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </React.Fragment>
   );
 }

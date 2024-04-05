@@ -62,7 +62,7 @@ export default async function InvoiceDashboadPage() {
       {/* {invoices.map((inv: Invoice) => {
         return <InvoiceTable invoice={inv} />;
       })} */}
-      <InvoiceTable invoices={invoices} />
+      <InvoiceTable invoices={invoices} user={user} />
     </Container>
   );
 }

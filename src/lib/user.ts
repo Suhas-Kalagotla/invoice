@@ -14,6 +14,7 @@ export default async function getUser() {
       email: session.user.email as string,
     },
     include: {
+      DefaultValues: true,  
       Setting: true,
     },
   });

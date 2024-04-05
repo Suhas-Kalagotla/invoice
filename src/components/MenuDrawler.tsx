@@ -116,7 +116,7 @@ function MenuDrawler(props: MenuDrawlerProps) {
               textTransform={"uppercase"}
               fontWeight={"bold"}
             >
-              Sures Invoce
+              Invoce
             </Typography>
             <Typography variant="subtitle2" textTransform="uppercase">
               Fast and Secure!

@@ -25,7 +25,7 @@ function Profile() {
           setShowDrodown(true);
         }}
       >
-        <PersonIcon fontSize="small" />
+        <PersonIcon fontSize="small" sx={{ color: "#fff" }}/>
       </IconButton>
 
       <Popover

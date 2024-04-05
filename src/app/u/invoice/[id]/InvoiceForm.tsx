@@ -10,6 +10,7 @@ import {
   Save,
 } from "@mui/icons-material";
 import {
+  Alert,
   Autocomplete,
   Button,
   Container,
@@ -33,7 +34,6 @@ import { Form, Formik, FormikProps } from "formik";
 import { createRef, forwardRef, useState } from "react";
 import AdvTextField from "./components/AdvTestField";
 import InvoiceTable from "./InvoiceTable";
-
 import { currencies } from "../../currencies";
 import { FormattedNumber, IntlProvider } from "react-intl";
 import NumericFormatCustom from "../../../../components/NumericFormatCustom";
@@ -49,9 +49,11 @@ import {
   DefaultValues,
 } from "@prisma/client";
 import { saveInvoice } from "./saveInvoice";
+import { saveDefaultValues } from "./saveDefaultValues";
 import ClientModal from "../../clients/ClientModal";
 import PrintPreviewModal from "./printing/PrintPreviewModal";
 import { useRouter } from "next/navigation";
+import CustomizedSnackbars from "@/components/Alert";
 
 export default function InvoiceForm(props: {
   invoice:
@@ -61,10 +63,10 @@ export default function InvoiceForm(props: {
     | null;
   settings: Setting;
   clients: Client[];
-  defaultValues: DefaultValues;
+  values: DefaultValues;
   invoiceId: number;
 }) {
-  const { invoice, clients, settings, defaultValues, invoiceId } = props;
+  const { invoice, clients, settings, values, invoiceId } = props;
 
   const router = useRouter();
 
@@ -75,7 +77,7 @@ export default function InvoiceForm(props: {
     userId: 0,
     date_prepared: new Date(),
     due_date: new Date(),
-    bill_to: "",
+    bill_to: 0,
     shipped_to: "",
     payment_terms: 0,
     po: "",
@@ -88,30 +90,30 @@ export default function InvoiceForm(props: {
     shipping: 0,
     amount_paid: 0,
     link: "",
-    FROM_lbl: defaultValues.FROM_lbl || "From",
-    INVOICE_lbl: defaultValues.INVOICE_lbl || "Invoice",
-    BILL_TO_lbl: defaultValues.BILL_TO_lbl || "Bill To",
-    SHIPPED_TO_lbl: defaultValues.SHIPPED_TO_lbl || "Shipped To",
-    PAYMENT_TERMS_lbl: defaultValues.PAYMENT_TERMS_lbl || "Payment Terms",
-    DATE_PREPARED_lbl: defaultValues.DATE_PREPARED_lbl || "Date Prepared",
-    DUE_DATE_lbl: defaultValues.DUE_DATE_lbl || "Due Date",
-    TABLE_ITEM_lbl: defaultValues.TABLE_ITEM_lbl || "Item",
-    TABLE_QTY_lbl: defaultValues.TABLE_QTY_lbl || "Qty",
-    TABLE_RATE_lbl: defaultValues.TABLE_RATE_lbl || "Rate",
-    TABLE_AMOUNT_lbl: defaultValues.TABLE_AMOUNT_lbl || "Amount",
-    PO_lbl: defaultValues.PO_lbl || "PO",
-    NOTE_lbl: defaultValues.NOTE_lbl || "Note",
-    TERMS_lbl: defaultValues.TERMS_lbl || "Terms",
-    LINK_lbl: defaultValues.LINK_lbl || "Link",
-    QR_lbl: defaultValues.QR_lbl || "QR",
-    SUB_TOTAL_lbl: defaultValues.SUB_TOTAL_lbl || "Subtotal",
-    DISCOUNT_lbl: defaultValues.DISCOUNT_lbl || "Discount",
-    SHIPPING_lbl: defaultValues.SHIPPING_lbl || "Shipping",
-    TAX_RATE_lbl: defaultValues.TAX_RATE_lbl || "Tax Rate",
-    TOTAL_lbl: defaultValues.TOTAL_lbl || "Total",
-    AMOUNT_PAID_lbl: defaultValues.AMOUNT_PAID_lbl || "Amount paid",
-    BALANCE_DUE_lbl: defaultValues.BALANCE_DUE_lbl || "Balance Due",
-    SIGNATURE_lbl: defaultValues.SIGNATURE_lbl || "Signature",
+    FROM_lbl: values.FROM_lbl || "From",
+    INVOICE_lbl: values.INVOICE_lbl || "Invoice",
+    BILL_TO_lbl: values.BILL_TO_lbl || "Bill To",
+    SHIPPED_TO_lbl: values.SHIPPED_TO_lbl || "Shipped To",
+    PAYMENT_TERMS_lbl: values.PAYMENT_TERMS_lbl || "Payment Terms",
+    DATE_PREPARED_lbl: values.DATE_PREPARED_lbl || "Date Prepared",
+    DUE_DATE_lbl: values.DUE_DATE_lbl || "Due Date",
+    TABLE_ITEM_lbl: values.TABLE_ITEM_lbl || "Item",
+    TABLE_QTY_lbl: values.TABLE_QTY_lbl || "Qty",
+    TABLE_RATE_lbl: values.TABLE_RATE_lbl || "Rate",
+    TABLE_AMOUNT_lbl: values.TABLE_AMOUNT_lbl || "Amount",
+    PO_lbl: values.PO_lbl || "PO",
+    NOTE_lbl: values.NOTE_lbl || "Note",
+    TERMS_lbl: values.TERMS_lbl || "Terms",
+    LINK_lbl: values.LINK_lbl || "Link",
+    QR_lbl: values.QR_lbl || "QR",
+    SUB_TOTAL_lbl: values.SUB_TOTAL_lbl || "Subtotal",
+    DISCOUNT_lbl: values.DISCOUNT_lbl || "Discount",
+    SHIPPING_lbl: values.SHIPPING_lbl || "Shipping",
+    TAX_RATE_lbl: values.TAX_RATE_lbl || "Tax Rate",
+    TOTAL_lbl: values.TOTAL_lbl || "Total",
+    AMOUNT_PAID_lbl: values.AMOUNT_PAID_lbl || "Amount paid",
+    BALANCE_DUE_lbl: values.BALANCE_DUE_lbl || "Balance Due",
+    SIGNATURE_lbl: values.SIGNATURE_lbl || "Signature",
   };
 
   // Shipping fee
@@ -131,10 +133,10 @@ export default function InvoiceForm(props: {
     >
   >();
 
- const [showTemplateSaveDialog, setShowTemplateSaveDialog] = useState(false);
+  const [showTemplateSaveDialog, setShowTemplateSaveDialog] = useState(false);
   const [openClientModal, setOpenClientModal] = useState<boolean>(false);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
-
+  const [open, setOpen] = useState(false);
   return (
     <>
       <IntlProvider locale="fr">
@@ -209,8 +211,6 @@ export default function InvoiceForm(props: {
                 touched,
               } = formik;
 
-              console.log(values, "values");
-
               const subTotal = values.items
                 .map((p) => p.qty * p.price)
                 .reduce((p, c) => {
@@ -221,9 +221,10 @@ export default function InvoiceForm(props: {
 
               const discountAmount =
                 (subTotal + taxAmount) * (values.discount / 100);
+
               const total =
-                subTotal + taxAmount - discountAmount + values.shipping;
-              const balanceDue = total - values.amount_paid;
+                subTotal + taxAmount - discountAmount + Number(values.shipping);
+              const balanceDue = total - Number(values.amount_paid);
               return (
                 <Form>
                   <Toolbar color="">
@@ -237,7 +238,7 @@ export default function InvoiceForm(props: {
                     </IconButton>
                   </Toolbar>
                   <Stack direction="row" spacing={2}>
-                    <Paper sx={{ p: 2 }}>
+                    <Paper sx={{ p: 2, border: "1px solid black" }}>
                       {/* Invoice Header */}
                       <Stack direction="row" justifyContent="space-between">
                         {/* RIght Header*/}
@@ -266,10 +267,10 @@ export default function InvoiceForm(props: {
                                     textAlign: "left",
                                   },
                                 }}
-                                name="FROM"
+                                name="FROM_lbl"
                                 onChange={handleChange}
                                 onBlur={handleBlur}
-                                defaultValue={values.FROM_lbl}
+                                value={values.FROM_lbl}
                               />
 
                               <Link href="/u/settings">
@@ -333,11 +334,11 @@ export default function InvoiceForm(props: {
                                   name="BILL_TO"
                                   onChange={handleChange}
                                   onBlur={handleBlur}
-                                  defaultValue={values.BILL_TO_lbl}
+                                  value={values.BILL_TO_lbl}
                                 />
 
                                 {values.bill_to ? (
-                                    <Button
+                                  <Button
                                     onClick={() => {
                                       setOpenClientModal(true);
                                     }}
@@ -368,8 +369,7 @@ export default function InvoiceForm(props: {
                                   <Stack flexGrow={1}>
                                     {(() => {
                                       const client = clients.find(
-                                        (c: Client) =>
-                                          c.id.toString() == values.bill_to
+                                        (c: Client) => c.id === values.bill_to,
                                       );
                                       if (!client) {
                                         return "No result";
@@ -419,11 +419,11 @@ export default function InvoiceForm(props: {
                               ) : (
                                 <Autocomplete
                                   options={clients.map((d: Client) =>
-                                    d.id.toString()
+                                    d.id.toString(),
                                   )}
                                   getOptionLabel={(option: string) => {
                                     const client = clients.find(
-                                      (c: Client) => c.id.toString() == option
+                                      (c: Client) => c.id.toString() == option,
                                     );
                                     if (!client) {
                                       return "No result";
@@ -440,7 +440,7 @@ export default function InvoiceForm(props: {
                                   onChange={(_e, value) => {
                                     setFieldValue("bill_to", value);
                                   }}
-                                  value={values.bill_to}
+                                  value={values.bill_to.toString()}
                                   renderInput={(params) => (
                                     <TextField {...params} name={"bill_to"} />
                                   )}
@@ -452,7 +452,7 @@ export default function InvoiceForm(props: {
                               <Stack>
                                 <AdvTextField
                                   size="small"
-                                  defaultValue={values.SHIPPED_TO_lbl}
+                                  value={values.SHIPPED_TO_lbl}
                                   inputProps={{
                                     style: {
                                       textAlign: "left",
@@ -469,7 +469,7 @@ export default function InvoiceForm(props: {
                                   value={values.shipped_to}
                                   size="small"
                                   error={Boolean(
-                                    errors.shipped_to && touched.shipped_to
+                                    errors.shipped_to && touched.shipped_to,
                                   )}
                                 />
                               </Stack>
@@ -484,8 +484,8 @@ export default function InvoiceForm(props: {
                             <AdvTextField
                               onChange={handleChange}
                               onBlur={handleBlur}
-                              defaultValue={values.INVOICE_lbl}
-                              name="INVOICE"
+                              value={values.INVOICE_lbl}
+                              name="INVOICE_lbl"
                               inputProps={{
                                 style: {
                                   fontSize: "40px",
@@ -521,8 +521,8 @@ export default function InvoiceForm(props: {
                             <Stack direction="row" alignItems="center">
                               <AdvTextField
                                 fullWidth
-                                defaultValue={values.DATE_PREPARED_lbl}
-                                name="DATE_PREPARED"
+                                value={values.DATE_PREPARED_lbl}
+                                name="DATE_PREPARED_lbl"
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                               />
@@ -535,7 +535,7 @@ export default function InvoiceForm(props: {
                                 value={values.date_prepared}
                                 size="small"
                                 error={Boolean(
-                                  errors.date_prepared && touched.date_prepared
+                                  errors.date_prepared && touched.date_prepared,
                                 )}
                               />
                             </Stack>
@@ -546,8 +546,8 @@ export default function InvoiceForm(props: {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 fullWidth
-                                defaultValue={values.PAYMENT_TERMS_lbl}
-                                name="PAYMENT_TERMS"
+                                value={values.PAYMENT_TERMS_lbl}
+                                name="PAYMENT_TERMS_lbl"
                               />
 
                               <TextField
@@ -558,7 +558,7 @@ export default function InvoiceForm(props: {
                                 value={values.payment_terms}
                                 size="small"
                                 error={Boolean(
-                                  errors.payment_terms && touched.payment_terms
+                                  errors.payment_terms && touched.payment_terms,
                                 )}
                                 type="number"
                               />
@@ -568,10 +568,10 @@ export default function InvoiceForm(props: {
                             <Stack direction="row" alignItems="center">
                               <AdvTextField
                                 fullWidth
-                                defaultValue ={values.DUE_DATE_lbl}
+                                value={values.DUE_DATE_lbl}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
-                                name="DUE_DATE"
+                                name="DUE_DATE_lbl"
                               />
                               <TextField
                                 fullWidth
@@ -582,7 +582,7 @@ export default function InvoiceForm(props: {
                                 value={values.due_date}
                                 size="small"
                                 error={Boolean(
-                                  errors.due_date && touched.due_date
+                                  errors.due_date && touched.due_date,
                                 )}
                               />
                             </Stack>
@@ -593,8 +593,8 @@ export default function InvoiceForm(props: {
                                 fullWidth
                                 onChange={handleChange}
                                 onBlur={handleBlur}
-                                defaultValue={values.PO_lbl}
-                                name="PO"
+                                value={values.PO_lbl}
+                                name="PO_lbl"
                               />
                               <TextField
                                 fullWidth
@@ -628,9 +628,8 @@ export default function InvoiceForm(props: {
                               inputProps={{ style: { textAlign: "left" } }}
                               onChange={handleChange}
                               onBlur={handleBlur}
-
-                              defaultValue={values.NOTE_lbl}
-                              name="NOTE"
+                              value={values.NOTE_lbl}
+                              name="NOTE_lbl"
                             />
                             <TextField
                               fullWidth
@@ -663,8 +662,8 @@ export default function InvoiceForm(props: {
                                     }}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
-                                    defaultValue={values.LINK_lbl}
-                                    name="LINK"
+                                    value={values.LINK_lbl}
+                                    name="LINK_lbl"
                                   />
 
                                   <IconButton color="warning">
@@ -711,8 +710,8 @@ export default function InvoiceForm(props: {
                                     }}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
-                                    defaultValue={values.QR_lbl}
-                                    name="QR"
+                                    value={values.QR_lbl}
+                                    name="QR_lbl"
                                   />
 
                                   <IconButton
@@ -778,9 +777,8 @@ export default function InvoiceForm(props: {
                               inputProps={{ style: { textAlign: "left" } }}
                               onChange={handleChange}
                               onBlur={handleBlur}
-
-                              defaultValue={values.TERMS_lbl}
-                              name="TERMS"
+                              value={values.TERMS_lbl}
+                              name="TERMS_lbl"
                             />
                             <TextField
                               fullWidth
@@ -828,11 +826,10 @@ export default function InvoiceForm(props: {
                                 <tr>
                                   <td>
                                     <AdvTextField
-
-                                      defaultValue={values.DISCOUNT_lbl}
+                                      value={values.DISCOUNT_lbl}
                                       onChange={handleChange}
                                       onBlur={handleBlur}
-                                      name="DISCOUNT"
+                                      name="DISCOUNT_lbl"
                                     />
                                   </td>
                                   <td>
@@ -843,7 +840,7 @@ export default function InvoiceForm(props: {
                                       value={values.discount}
                                       size="small"
                                       error={Boolean(
-                                        errors.discount && touched.discount
+                                        errors.discount && touched.discount,
                                       )}
                                       InputProps={{
                                         endAdornment: (
@@ -879,11 +876,10 @@ export default function InvoiceForm(props: {
                                 <tr>
                                   <td>
                                     <AdvTextField
-
-                                      defaultValue={values.SHIPPING_lbl}
+                                      value={values.SHIPPING_lbl}
                                       onChange={handleChange}
                                       onBlur={handleBlur}
-                                      name="SHIPPING"
+                                      name="SHIPPING_lbl"
                                     />
                                   </td>
                                   <td>
@@ -895,7 +891,7 @@ export default function InvoiceForm(props: {
                                       value={values.shipping}
                                       type="number"
                                       error={Boolean(
-                                        errors.shipping && touched.shipping
+                                        errors.shipping && touched.shipping,
                                       )}
                                       InputProps={{
                                         inputComponent:
@@ -938,8 +934,8 @@ export default function InvoiceForm(props: {
                                 <tr>
                                   <td>
                                     <AdvTextField
-
-                                      defaultValue={values.TAX_RATE_lbl}
+                                      name="TAX_RATE_lbl"
+                                      value={values.TAX_RATE_lbl}
                                       onChange={handleChange}
                                       onBlur={handleBlur}
                                     />
@@ -952,7 +948,7 @@ export default function InvoiceForm(props: {
                                       value={values.tax_rate}
                                       name="tax_rate"
                                       error={Boolean(
-                                        errors.tax_rate && touched.tax_rate
+                                        errors.tax_rate && touched.tax_rate,
                                       )}
                                       InputProps={{
                                         endAdornment: (
@@ -1061,9 +1057,8 @@ export default function InvoiceForm(props: {
                                     style={{
                                       fontWeight: "normal",
                                     }}
-
-                                    defaultValue={values.AMOUNT_PAID_lbl}
-                                    name="AMOUNT_PAID"
+                                    value={values.AMOUNT_PAID_lbl}
+                                    name="AMOUNT_PAID_lbl"
                                   />
                                 </td>
                                 <td>
@@ -1074,7 +1069,7 @@ export default function InvoiceForm(props: {
                                     value={values.amount_paid}
                                     name="amount_paid"
                                     error={Boolean(
-                                      errors.amount_paid && touched.amount_paid
+                                      errors.amount_paid && touched.amount_paid,
                                     )}
                                     type="number"
                                     InputProps={{
@@ -1099,11 +1094,10 @@ export default function InvoiceForm(props: {
                               <tr>
                                 <td>
                                   <AdvTextField
-
-                                    defaultValue={values.BALANCE_DUE_lbl}
+                                    value={values.BALANCE_DUE_lbl}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
-                                    name="BALANCE_DUE"
+                                    name="BALANCE_DUE_lbl"
                                   />
                                 </td>
                                 <td>
@@ -1141,9 +1135,8 @@ export default function InvoiceForm(props: {
                                     }
                                   >
                                     <AdvTextField
-
-                                      defaultValue={values.SIGNATURE_lbl}
-                                      name="SIGNATURE"
+                                      value={values.SIGNATURE_lbl}
+                                      name="SIGNATURE_lbl"
                                       onChange={handleChange}
                                       onBlur={handleBlur}
                                       inputProps={{
@@ -1189,7 +1182,7 @@ export default function InvoiceForm(props: {
                             options={currencies.map((c) => c.code)}
                             getOptionLabel={(option) => {
                               const i = currencies.find(
-                                (c) => c.code == option
+                                (c) => c.code == option,
                               );
                               if (!i) {
                                 return "Not FOumd";
@@ -1244,8 +1237,14 @@ export default function InvoiceForm(props: {
                       setShowTemplateSaveDialog(false);
                     }}
                     open={showTemplateSaveDialog}
-                    onYes={() => {
-                      console.log("saving default");
+                    onYes={async () => {
+                      try {
+                        await saveDefaultValues(values);
+                        setOpen(true);
+                        setShowTemplateSaveDialog(false);
+                      } catch (error) {
+                        console.log(error);
+                      }
                     }}
                   />
 
@@ -1274,6 +1273,11 @@ export default function InvoiceForm(props: {
           )}
         </Container>
       </IntlProvider>
+      <CustomizedSnackbars
+        open={open}
+        description={"Template Saved Successfully"}
+        setOpen={setOpen}
+      ></CustomizedSnackbars>
     </>
   );
 }
@@ -1282,7 +1286,7 @@ const Transition = forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement<any, any>;
   },
-  ref: React.Ref<unknown>
+  ref: React.Ref<unknown>,
 ) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
